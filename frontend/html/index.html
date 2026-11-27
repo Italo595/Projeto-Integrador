@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resposta (PID) - Dashboard LTR701</title>
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="../css/auth.css">
+    <script src="../js/auth.js"></script>
+    <script>exigirLogin();</script>
+    <link rel="stylesheet" href="../css/index.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body data-modo="local">
+    <input type="checkbox" id="toggle-aside" class="input-toggle">
+
+    <header class="top-bar">
+        <div class="header-left">
+            <label for="toggle-aside" class="btn-toggle-aside">☰ Painel</label>
+            <h1>Dashboard LTR701</h1>
+        </div>
+        <nav class="main-nav">
+            <a href="index.html" class="active">Resposta (PID)</a>
+            <a href="estatistica.html">Séries Históricas</a>
+            <a href="sistema.html">Status e Logs</a>
+            <a href="usuarios.html">Usuários</a>
+        </nav>
+    </header>
+
+    <div class="dashboard">
+        <aside class="painel-controle">
+            <h2>Controle</h2>
+
+            <div class="card-controle">
+                <label for="modo-com">Modo de operação</label>
+                <select id="modo-com" onchange="trocarModoCom()">
+                    <option value="local">Simulação local (sem MATLAB)</option>
+                    <option value="simulada">MATLAB simulado (sem o kit)</option>
+                    <option value="real">MATLAB + kit LTR701 (real)</option>
+                </select>
+                <span id="modo-dica" class="tf-msg"></span>
+            </div>
+
+            <!-- ===== Modos com MATLAB: só "ligado" (0/1) e setpoint vão ao MATLAB ===== -->
+            <div class="card-controle so-matlab">
+                <label>MATLAB</label>
+                <span id="status-matlab" class="status-dispositivos"></span>
+            </div>
+
+            <div class="card-controle so-matlab">
+                <button id="btn-status" class="btn-off" onclick="toggleSistema()">Desligado</button>
+            </div>
+
+            <div class="card-controle so-matlab">
+                <div class="campo">
+                    <label for="sp-real">Setpoint (°C)</label>
+                    <input type="number" id="sp-real" value="40" min="1" max="99" step="0.5">
+                </div>
+                <span id="real-msg" class="tf-msg"></span>
+            </div>
+
+            <div class="card-controle so-matlab">
+                <button id="btn-enviar" onclick="enviarSetpoint()">Atualizar</button>
+            </div>
+
+            <!-- ===== Simulação local: planta G(z) e PI calculados no navegador ===== -->
+            <div class="card-controle so-local">
+                <div class="pid-inputs dupla2">
+                    <div class="campo"><label for="sim-tf">Tempo final (s)</label>
+                        <input type="number" id="sim-tf" value="600" min="1" max="3600" step="10"></div>
+                    <div class="campo"><label for="sim-t0">Temp. inicial (°C)</label>
+                        <input type="number" id="sim-t0" value="25" min="0" max="99" step="0.5"></div>
+                </div>
+            </div>
+            <div class="card-controle so-local">
+                <div class="pid-inputs dupla2">
+                    <div class="campo"><label for="sim-sp1">Set point 1 (°C)</label>
+                        <input type="number" id="sim-sp1" value="40" min="1" max="99" step="0.5"></div>
+                    <div class="campo"><label for="sim-sp2">Set point 2 (°C)</label>
+                        <input type="number" id="sim-sp2" value="50" min="1" max="99" step="0.5"></div>
+                </div>
+            </div>
+            <div class="card-controle so-local">
+                <div class="pid-inputs dupla2">
+                    <div class="campo"><label for="sim-tsp2">Troca de SP em (s)</label>
+                        <input type="number" id="sim-tsp2" value="300" min="0" step="10"></div>
+                    <div class="campo"><label for="sim-pert">Perturbação (°C)</label>
+                        <input type="number" id="sim-pert" value="-5" step="0.5"></div>
+                </div>
+            </div>
+            <div class="card-controle so-local">
+                <div class="pid-inputs dupla2">
+                    <div class="campo"><label for="sim-tpert">Perturbação em (s)</label>
+                        <input type="number" id="sim-tpert" value="450" min="0" step="10"></div>
+                    <div class="campo"><label for="sim-vel">Velocidade</label>
+                        <select id="sim-vel">
+                            <option value="1">1× (tempo real)</option>
+                            <option value="5">5×</option>
+                            <option value="20" selected>20×</option>
+                            <option value="0">Instantânea</option>
+                        </select></div>
+                </div>
+            </div>
+            <div class="card-controle so-local">
+                <div class="pid-inputs dupla2">
+                    <div class="campo"><label for="sim-kp">Kp</label>
+                        <input type="number" id="sim-kp" value="1" min="0" step="0.1"></div>
+                    <div class="campo"><label for="sim-ki">Ki</label>
+                        <input type="number" id="sim-ki" value="0.05" min="0" step="0.01"></div>
+                </div>
+            </div>
+            <div class="card-controle so-local">
+                <button id="btn-simular" onclick="iniciarLocal()">Simular</button>
+                <button id="btn-parar" class="btn-off" onclick="pararLocal(true)" disabled>Parar</button>
+                <span id="sim-msg" class="tf-msg"></span>
+            </div>
+        </aside>
+
+        <main class="area-graficos">
+            <!-- Sombra digital do kit LTR701: desenhada nos 3 modos (local, MATLAB simulado e MATLAB real) -->
+            <section class="kit-card" aria-label="Sombra digital do kit LTR701">
+                <svg id="kit" class="kit-svg" viewBox="0 0 760 260" role="img" aria-label="Kit LTR701 soprando ar quente">
+                    <!-- Tubulação e ar -->
+                    <rect x="150" y="85" width="450" height="90" rx="14" fill="#f8f9fa" stroke="#6c757d" stroke-width="3"/>
+                    <rect id="kit-ar" x="154" y="89" width="442" height="82" rx="11" fill="hsl(210,85%,68%)" opacity="0.55"/>
+                    <g stroke="#fff" stroke-width="3" stroke-linecap="round" fill="none">
+                        <line class="fluxo" x1="160" y1="108" x2="590" y2="108"/>
+                        <line class="fluxo" x1="160" y1="130" x2="590" y2="130" style="animation-delay:-.3s"/>
+                        <line class="fluxo" x1="160" y1="152" x2="590" y2="152" style="animation-delay:-.6s"/>
+                    </g>
+                    <!-- Ar de saída -->
+                    <path class="saida" d="M604 130 h26 m-8 -8 l8 8 l-8 8" stroke="#6c757d" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+                    <!-- Ventilador (ATUADOR 1) -->
+                    <circle cx="95" cy="130" r="62" fill="#e9ecef" stroke="#6c757d" stroke-width="3"/>
+                    <g id="kit-pas">
+                        <ellipse cx="95" cy="100" rx="12" ry="26" fill="#495057"/>
+                        <ellipse cx="95" cy="100" rx="12" ry="26" fill="#495057" transform="rotate(90 95 130)"/>
+                        <ellipse cx="95" cy="100" rx="12" ry="26" fill="#495057" transform="rotate(180 95 130)"/>
+                        <ellipse cx="95" cy="100" rx="12" ry="26" fill="#495057" transform="rotate(270 95 130)"/>
+                    </g>
+                    <circle cx="95" cy="130" r="8" fill="#212529"/>
+                    <text x="95" y="222" text-anchor="middle" class="kit-rotulo">ATUADOR 1</text>
+                    <text x="95" y="238" text-anchor="middle" class="kit-rotulo2">Ventilador</text>
+
+                    <!-- Aquecedor (ATUADOR 2) -->
+                    <path id="kit-aq" d="M285 95 l12 70 l12 -70 l12 70 l12 -70 l12 70 l12 -70"
+                          fill="none" stroke="#adb5bd" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+                    <text x="335" y="205" text-anchor="middle" class="kit-rotulo">ATUADOR 2</text>
+                    <text x="335" y="221" text-anchor="middle" class="kit-rotulo2">Aquecedor: <tspan id="kit-aq-nivel">0%</tspan></text>
+
+                    <!-- Sensor de temperatura (SENSOR 2) -->
+                    <line x1="520" y1="85" x2="520" y2="130" stroke="#212529" stroke-width="3"/>
+                    <circle cx="520" cy="130" r="8" fill="#212529"/>
+                    <rect x="478" y="38" width="84" height="30" rx="6" fill="#212529"/>
+                    <text id="kit-temp-sensor" x="520" y="59" text-anchor="middle" class="kit-sensor-txt">--.- °C</text>
+                    <text x="520" y="205" text-anchor="middle" class="kit-rotulo">SENSOR 2</text>
+                    <text x="520" y="221" text-anchor="middle" class="kit-rotulo2">Temperatura</text>
+
+                    <!-- Perturbação (tampa de entrada de ar) -->
+                    <text id="kit-pert" x="156" y="66" class="kit-pert" visibility="hidden">⚠ perturbação aplicada</text>
+
+                    <!-- Painel de leitura -->
+                    <rect x="640" y="50" width="112" height="150" rx="10" fill="#fff" stroke="#ced4da" stroke-width="2"/>
+                    <text x="696" y="72" text-anchor="middle" class="kit-rotulo2">Temperatura</text>
+                    <text id="kit-temp" x="696" y="108" text-anchor="middle" class="kit-temp">--.-</text>
+                    <text x="696" y="126" text-anchor="middle" class="kit-rotulo2">°C</text>
+                    <text id="kit-sp" x="696" y="148" text-anchor="middle" class="kit-rotulo">SP: --</text>
+                    <text id="kit-estado" x="696" y="170" text-anchor="middle" class="kit-estado">DESLIGADO</text>
+                    <text id="kit-fonte" x="696" y="188" text-anchor="middle" class="kit-rotulo2">--</text>
+                </svg>
+            </section>
+
+            <div class="grafico-grid">
+                <div class="grafico-container"><canvas id="graficoTemperatura"></canvas></div>
+                <div class="grafico-container"><canvas id="graficoSetpoint"></canvas></div>
+                <div class="grafico-container"><canvas id="graficoErro"></canvas></div>
+                <div class="grafico-container so-local"><canvas id="graficoControle"></canvas></div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="../js/main.js"></script>
+    <script src="../js/status.js"></script>
+    <script src="../js/kit.js"></script>
+    <script src="../js/simulacao.js"></script>
+</body>
+</html>

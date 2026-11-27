@@ -1,0 +1,18 @@
+.container-estatisticas { padding: 20px; display: flex; flex-direction: column; gap: 20px; height: calc(100vh - 70px); }
+
+.cards-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;
+}
+.stat-card {
+    background: #fff; padding: 20px; border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center;
+}
+.stat-card h3 { font-size: 1rem; color: #666; margin-bottom: 10px; }
+.stat-card p { font-size: 1.5rem; font-weight: bold; color: #007bff; }
+.anomalias p { color: #dc3545; } /* Destaca os outliers em vermelho */
+
+.grafico-historico {
+    flex: 1; background: #fff; padding: 20px; border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; flex-direction: column;
+}
+.canvas-wrapper { flex: 1; position: relative; min-height: 300px; }

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Status e Logs</title>
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="../css/auth.css">
+    <script src="../js/auth.js"></script>
+    <script>exigirAdmin();</script>
+    <link rel="stylesheet" href="../css/sistema.css">
+</head>
+<body data-somente-admin>
+    <header class="top-bar">
+        <div class="header-left"><h1>Dashboard LTR701</h1></div>
+        <nav class="main-nav">
+            <a href="index.html">Resposta (PID)</a>
+            <a href="estatistica.html">Séries Históricas</a>
+            <a href="sistema.html" class="active">Status e Logs</a>
+            <a href="usuarios.html">Usuários</a>
+        </nav>
+    </header>
+
+    <div class="container-sistema">
+        <aside class="status-panel">
+            <h2>Status de Conexão</h2>
+            <ul>
+                <li>Servidor Web: <span class="status online">Online</span></li>
+                <li>MATLAB Script: <span id="status-matlab" class="status-dispositivos"></span></li>
+            </ul>
+        </aside>
+
+        <main class="console-panel">
+            <h2>System Logs</h2>
+            <!-- Os logs são preenchidos por main.js (renderizarLogs) -->
+            <div id="terminal-logs" class="terminal"></div>
+        </main>
+    </div>
+
+    <section class="backup-panel">
+        <h2>Backup e Restauração</h2>
+        <button id="btn-backup" type="button">Fazer backup agora</button>
+        <span id="backup-msg"></span>
+        <table class="tabela-backup">
+            <thead><tr><th>#</th><th>Data</th><th>Tipo</th><th>Tamanho</th><th>Status</th><th></th></tr></thead>
+            <tbody id="lista-backups"></tbody>
+        </table>
+    </section>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="../js/main.js"></script>
+    <script src="../js/status.js"></script>
+    <script src="../js/sistema.js"></script>
+</body>
+</html>

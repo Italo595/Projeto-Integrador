@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usuários - Dashboard LTR701</title>
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="../css/auth.css">
+    <script src="../js/auth.js"></script>
+    <script>exigirAdmin();</script>
+</head>
+<body data-somente-admin>
+    <header class="top-bar">
+        <div class="header-left"><h1>Dashboard LTR701</h1></div>
+        <nav class="main-nav">
+            <a href="index.html">Resposta (PID)</a>
+            <a href="estatistica.html">Séries Históricas</a>
+            <a href="sistema.html">Status e Logs</a>
+            <a href="usuarios.html" class="active">Usuários</a>
+        </nav>
+    </header>
+
+    <div class="container-usuarios">
+        <h2>Gerenciar usuários</h2>
+        <p class="rest-msg">Administradores podem comandar o sistema e ver logs; usuários comuns apenas visualizam.</p>
+        <div id="usuarios-msg" class="rest-msg"></div>
+
+        <div class="tabela-wrapper">
+            <table id="tabela-usuarios" class="tabela-usuarios">
+                <thead>
+                    <tr>
+                        <th>Nome</th><th>E-mail</th><th>Papel</th><th>Situação</th>
+                        <th>Último login</th><th>Criado em</th><th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="../js/usuarios.js"></script>
+</body>
+</html>

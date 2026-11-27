@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro - Dashboard LTR701</title>
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="../css/auth.css">
+    <script src="../js/auth.js"></script>
+</head>
+<body>
+    <div class="auth-wrap">
+        <form class="auth-card" id="form-cadastro" novalidate>
+            <h1>Criar conta</h1>
+            <p class="sub">Dashboard LTR701</p>
+
+            <label>Nome
+                <input type="text" id="nome" autocomplete="name" maxlength="100" required>
+            </label>
+            <label>E-mail
+                <input type="email" id="email" autocomplete="username" required>
+            </label>
+            <label>Senha (mín. 8 caracteres)
+                <input type="password" id="senha" autocomplete="new-password" minlength="8" maxlength="72" required>
+            </label>
+            <label>Confirmar senha
+                <input type="password" id="senha2" autocomplete="new-password" required>
+            </label>
+
+            <div id="msg" class="auth-msg"></div>
+            <button type="submit" id="btn-cadastrar">Cadastrar</button>
+            <p class="troca">Já tem conta? <a href="login.html">Entrar</a></p>
+        </form>
+    </div>
+
+    <script>
+        if (getToken()) location.replace('index.html');
+
+        const msg = document.getElementById('msg');
+        const erro = t => { msg.className = 'auth-msg erro'; msg.textContent = t; };
+
+        document.getElementById('form-cadastro').addEventListener('submit', async e => {
+            e.preventDefault();
+            const nome = document.getElementById('nome').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const senha = document.getElementById('senha').value;
+            const senha2 = document.getElementById('senha2').value;
+
+            if (nome.length < 2) return erro('Informe seu nome.');
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return erro('E-mail inválido.');
+            if (senha.length < 8) return erro('A senha deve ter pelo menos 8 caracteres.');
+            if (senha !== senha2) return erro('As senhas não coincidem.');
+
+            const btn = document.getElementById('btn-cadastrar');
+            btn.disabled = true;
+            msg.className = 'auth-msg';
+            msg.textContent = 'Cadastrando...';
+            try {
+                await apiFetch('/auth/register', { method: 'POST', body: { nome, email, senha }, comAuth: false });
+                location.href = 'login.html?cadastro=ok';
+            } catch (err) {
+                erro(err.message);
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
